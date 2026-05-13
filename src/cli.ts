@@ -251,7 +251,7 @@ async function cmdAuthLogin(flags: Record<string, string>): Promise<void> {
 async function cmdAuthStatus(): Promise<void> {
   const creds = await readCredentials();
   if (!creds) {
-    console.log(`${c.yellow('Not logged in.')} Run: dropdeploy-plugin auth login`);
+    console.log(`${c.yellow('Not logged in.')} Run: dropdeploy auth login`);
     process.exit(1);
   }
   console.log(`${c.green('✓')} Logged in as ${c.bold(creds.email)}`);
@@ -266,7 +266,7 @@ async function cmdAuthLogout(): Promise<void> {
 async function cmdProjects(): Promise<void> {
   const creds = await readCredentials();
   if (!creds) {
-    console.error(c.red('Not logged in.') + ' Run: dropdeploy-plugin auth login');
+    console.error(c.red('Not logged in.') + ' Run: dropdeploy auth login');
     process.exit(1);
   }
   const api = new DropDeployApi(creds);
@@ -302,7 +302,7 @@ async function cmdDeploy(flags: Record<string, string>): Promise<void> {
   const creds = await readCredentials();
   if (!creds) {
     console.error(
-      c.red('Not logged in.') + ' Run: dropdeploy-plugin auth login',
+      c.red('Not logged in.') + ' Run: dropdeploy auth login',
     );
     process.exit(1);
   }
@@ -489,10 +489,10 @@ async function cmdDeploy(flags: Record<string, string>): Promise<void> {
 // ── Help ─────────────────────────────────────────────────────────────────────
 function cmdHelp(): void {
   console.log(`
-${c.bold('dropdeploy-plugin')} — Deploy projects to DropDeploy from the CLI
+${c.bold('dropdeploy')} — Deploy projects to DropDeploy from the CLI
 
 ${c.bold('USAGE')}
-  dropdeploy-plugin <command> [flags]
+  dropdeploy <command> [flags]
 
 ${c.bold('COMMANDS')}
   ${c.cyan('deploy')}                       Deploy the current project  ${c.dim('(default)')}
@@ -517,10 +517,10 @@ ${c.bold('ENVIRONMENT')}
   ${c.dim('DROPDEPLOY_EMAIL')}             Email  ${c.dim('(optional, cosmetic)')}
 
 ${c.bold('EXAMPLES')}
-  ${c.dim('$')} dropdeploy-plugin auth login
-  ${c.dim('$')} dropdeploy-plugin deploy
-  ${c.dim('$')} dropdeploy-plugin deploy --project-id my-app
-  ${c.dim('$')} dropdeploy-plugin projects
+  ${c.dim('$')} dropdeploy auth login
+  ${c.dim('$')} dropdeploy deploy
+  ${c.dim('$')} dropdeploy deploy --project-id my-app
+  ${c.dim('$')} dropdeploy projects
 `);
 }
 
@@ -583,7 +583,7 @@ async function main(): Promise<void> {
   if (cmd === 'help' || cmd === '--help' || cmd === '-h') return cmdHelp();
 
   console.error(`Unknown command: ${cmd}`);
-  console.error('Run dropdeploy-plugin help for usage.');
+  console.error('Run dropdeploy help for usage.');
   process.exit(1);
 }
 

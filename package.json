@@ -1,10 +1,10 @@
 {
-  "name": "@dropdeploy/plugin",
-  "version": "1.0.0",
+  "name": "dropdeploy-cli",
+  "version": "1.0.2",
   "description": "Claude Code plugin — deploy to DropDeploy with /deploy",
   "type": "module",
   "bin": {
-    "dropdeploy-plugin": "./dist/cli.js"
+    "dropdeploy": "dist/cli.js"
   },
   "files": [
     "dist"
