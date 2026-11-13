@@ -1,6 +1,16 @@
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { readFile, writeFile, rename, mkdir, unlink } from 'node:fs/promises';
+import { apiErrorMessage } from './util.js';
+
+/** Where `entrify auth login` connects unless --api-url says otherwise. */
+export const PRODUCTION_URL = 'https://entrify.site';
+// ponytail: the platform moved from app.en3.wtf; drop this once that domain is retired.
+const LEGACY_PRODUCTION_URL = 'https://app.en3.wtf';
+
+/** Saved logins keep working after the move: same server, same token, new host. */
+const currentUrl = (url: string): string =>
+  url.replace(/\/$/, '') === LEGACY_PRODUCTION_URL ? PRODUCTION_URL : url;
 
 export interface Credentials {
   token: string;
@@ -8,6 +18,7 @@ export interface Credentials {
   apiUrl: string;
 }
 
+// Kept under the old name so logins saved by earlier versions keep working.
 function configDir(): string {
   if (process.platform === 'win32' && process.env.APPDATA) {
     return join(process.env.APPDATA, 'dropdeploy');
@@ -26,17 +37,21 @@ export async function saveCredentials(creds: Credentials): Promise<void> {
 }
 
 export async function readCredentials(): Promise<Credentials | null> {
-  // Allow overriding via environment variable (useful in CI)
-  if (process.env.DROPDEPLOY_TOKEN && process.env.DROPDEPLOY_URL) {
+  // Allow overriding via environment variable (useful in CI). The DROPDEPLOY_* names still work.
+  const env = process.env;
+  const token = env.ENTRIFY_TOKEN ?? env.DROPDEPLOY_TOKEN;
+  const url = env.ENTRIFY_URL ?? env.DROPDEPLOY_URL;
+  if (token && url) {
     return {
-      token: process.env.DROPDEPLOY_TOKEN,
-      email: process.env.DROPDEPLOY_EMAIL ?? 'env',
-      apiUrl: process.env.DROPDEPLOY_URL,
+      token,
+      email: env.ENTRIFY_EMAIL ?? env.DROPDEPLOY_EMAIL ?? 'env',
+      apiUrl: currentUrl(url),
     };
   }
   try {
     const raw = await readFile(credsPath(), 'utf8');
-    return JSON.parse(raw) as Credentials;
+    const creds = JSON.parse(raw) as Credentials;
+    return { ...creds, apiUrl: currentUrl(creds.apiUrl) };
   } catch {
     return null;
   }
@@ -65,8 +80,8 @@ export async function login(
     body: JSON.stringify({ email, password }),
   });
   if (!res.ok) {
-    const err = (await res.json().catch(() => ({}))) as { message?: string };
-    throw new Error(err.message ?? `Login failed (${res.status})`);
+    const body: unknown = await res.json().catch(() => null);
+    throw new Error(apiErrorMessage(body, `Login failed (${res.status})`));
   }
   const { data } = (await res.json()) as {
     data: { token: string; userId: string; email: string };
